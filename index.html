@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Person Detection + Arduino</title>
+  <title>All Class Detection + Arduino (No Roboflow)</title>
 </head>
 <body>
-  <h2>Person Detection in the Browser (No Roboflow)</h2>
+  <h2>All Object Detection in the Browser</h2>
   <video id="webcam" width="640" height="480" autoplay playsinline></video>
   <canvas id="canvas" width="640" height="480" style="position: absolute; top: 0; left: 0;"></canvas>
   <br />
-  <button onclick="connectToArduino()">Connect to Arduino</button>
+  <button onclick="connectToArduino()">🔌 Connect to Arduino</button>
 
+  <!-- Load TensorFlow.js and COCO-SSD -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
@@ -48,18 +49,26 @@
       let foundPerson = false;
 
       predictions.forEach(pred => {
+        const [x, y, width, height] = pred.bbox;
+        const label = `${pred.class} ${Math.round(pred.score * 100)}%`;
+
+        //Draw bounding box
+        ctx.strokeStyle = "lime";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, width, height);
+
+        //Draw label
+        ctx.font = "16px sans-serif";
+        ctx.fillStyle = "lime";
+        ctx.fillText(label, x, y - 5);
+
+        //Check for person
         if (pred.class === "person" && pred.score > 0.5) {
           foundPerson = true;
-          const [x, y, width, height] = pred.bbox;
-          ctx.strokeStyle = "lime";
-          ctx.lineWidth = 2;
-          ctx.strokeRect(x, y, width, height);
-          ctx.font = "16px sans-serif";
-          ctx.fillStyle = "lime";
-          ctx.fillText(`👤 ${Math.round(pred.score * 100)}%`, x, y - 5);
         }
       });
 
+      // Send signal to Arduino
       if (writer) {
         await writer.write(new TextEncoder().encode(foundPerson ? '1' : '0'));
       }
