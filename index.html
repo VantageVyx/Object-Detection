@@ -63,7 +63,7 @@
         ctx.fillText(label, x, y - 5);
 
         //Check for person
-        if (pred.class === "person" && pred.score > 0.5) {
+        if (pred.class === "person" && pred.score > 0.25) {
           foundPerson = true;
         }
       });
