@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Person Detection + Arduino</title>
+</head>
+<body>
+  <h2>Person Detection in the Browser (No Roboflow)</h2>
+  <video id="webcam" width="640" height="480" autoplay playsinline></video>
+  <canvas id="canvas" width="640" height="480" style="position: absolute; top: 0; left: 0;"></canvas>
+  <br />
+  <button onclick="connectToArduino()">Connect to Arduino</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+  <script>
+    let model, ctx, video, canvas, writer = null;
+
+    async function connectToArduino() {
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 9600 });
+        writer = port.writable.getWriter();
+        alert("✅ Arduino connected!");
+      } catch (err) {
+        alert("❌ Error connecting to Arduino: " + err);
+      }
+    }
+
+    async function start() {
+      model = await cocoSsd.load();
+      video = document.getElementById('webcam');
+      canvas = document.getElementById('canvas');
+      ctx = canvas.getContext('2d');
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+
+      video.onloadedmetadata = () => {
+        detectFrame();
+      };
+    }
+
+    async function detectFrame() {
+      const predictions = await model.detect(video);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let foundPerson = false;
+
+      predictions.forEach(pred => {
+        if (pred.class === "person" && pred.score > 0.5) {
+          foundPerson = true;
+          const [x, y, width, height] = pred.bbox;
+          ctx.strokeStyle = "lime";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, width, height);
+          ctx.font = "16px sans-serif";
+          ctx.fillStyle = "lime";
+          ctx.fillText(`👤 ${Math.round(pred.score * 100)}%`, x, y - 5);
+        }
+      });
+
+      if (writer) {
+        await writer.write(new TextEncoder().encode(foundPerson ? '1' : '0'));
+      }
+
+      requestAnimationFrame(detectFrame);
+    }
+
+    start();
+  </script>
+</body>
+</html>
