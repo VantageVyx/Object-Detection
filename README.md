@@ -1,2 +1,2 @@
 # Object-Detection
-This repo provides the colab code to run yolov11 in real time from a computer webcam
+This repo provides the javascript code to run object detection in real time from a computer webcam on a web browser
