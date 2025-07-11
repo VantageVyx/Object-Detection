@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Class Detection + Arduino (No Roboflow)</title>
+  <title>EfficientDet-D0 Object Detection + Arduino</title>
 </head>
 <body>
-  <h2>All Object Detection in the Browser</h2>
+  <h2>EfficientDet Object Detection in the Browser</h2>
   <video id="webcam" width="640" height="480" autoplay playsinline></video>
   <canvas id="canvas" width="640" height="480" style="position: absolute; top: 0; left: 0;"></canvas>
   <br />
   <button onclick="connectToArduino()">🔌 Connect to Arduino</button>
 
-  <!-- Load TensorFlow.js and COCO-SSD -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+  <!-- Load TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0"></script>
+  <!-- Load EfficientDetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/efficientdetjs@1.0.4/dist/efficientdet.min.js"></script>
 
   <script>
     let model, ctx, video, canvas, writer = null;
@@ -29,7 +30,7 @@
     }
 
     async function start() {
-      model = await cocoSsd.load();
+      //Load video
       video = document.getElementById('webcam');
       canvas = document.getElementById('canvas');
       ctx = canvas.getContext('2d');
@@ -37,13 +38,17 @@
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       video.srcObject = stream;
 
+      //Load EfficientDet model (hosted by EfficientDetJS)
+      model = new EfficientDetJS.EfficientDet({ modelUrl: 'https://cdn.jsdelivr.net/npm/efficientdetjs@1.0.4/models/efficientdet-d0/model.json' });
+      await model.load();
+
       video.onloadedmetadata = () => {
         detectFrame();
       };
     }
 
     async function detectFrame() {
-      const predictions = await model.detect(video);
+      const predictions = await model.predict(video); // efficientdet runs here
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       let foundPerson = false;
@@ -62,13 +67,13 @@
         ctx.fillStyle = "lime";
         ctx.fillText(label, x, y - 5);
 
-        //Check for person
+        //Detect if a person is found
         if (pred.class === "person" && pred.score > 0.25) {
           foundPerson = true;
         }
       });
 
-      // Send signal to Arduino
+      //Send signal to Arduino
       if (writer) {
         await writer.write(new TextEncoder().encode(foundPerson ? '1' : '0'));
       }
