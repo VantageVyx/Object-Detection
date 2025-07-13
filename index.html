@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Person/Cup Detection + Arduino (Multi-LED)</title>
+  <title>Person + Cup Detection (Multi-LED)</title>
 </head>
 <body>
-  <h2>Object Detection in the Browser</h2>
+  <h2>Object Detection</h2>
   <video id="webcam" width="640" height="480" autoplay playsinline></video>
   <canvas id="canvas" width="640" height="480" style="position: absolute; top: 0; left: 0;"></canvas>
   <br />
   <button onclick="connectToArduino()">🔌 Connect to Arduino</button>
 
-  <!-- Load TensorFlow.js and COCO-SSD -->
+  <!-- Load TF.js and COCO-SSD -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
@@ -74,11 +74,7 @@
         }
       });
 
-      let personFlag = personCount >= 2 ? '2' : (personCount === 1 ? '1' : '0');
-      let cupFlag = foundCup ? '1' : '0';
-      let reserved = '0'; // for future use
-
-      let message = personFlag + cupFlag + reserved;
+      let message = personCount + "," + (foundCup ? 1 : 0) + "\n";
 
       if (writer) {
         await writer.write(new TextEncoder().encode(message));
