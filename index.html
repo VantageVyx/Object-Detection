@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Person/Cup Detection + Arduino</title>
+  <title>Person/Cup Detection + Arduino (Multi-LED)</title>
 </head>
 <body>
   <h2>Object Detection in the Browser</h2>
@@ -74,16 +74,14 @@
         }
       });
 
+      let personFlag = personCount >= 2 ? '2' : (personCount === 1 ? '1' : '0');
+      let cupFlag = foundCup ? '1' : '0';
+      let reserved = '0'; // for future use
+
+      let message = personFlag + cupFlag + reserved;
+
       if (writer) {
-        if (personCount >= 2) {
-          await writer.write(new TextEncoder().encode('3')); //2+ people
-        } else if (personCount === 1) {
-          await writer.write(new TextEncoder().encode('1')); //1 person
-        } else if (foundCup) {
-          await writer.write(new TextEncoder().encode('2')); //cup
-        } else {
-          await writer.write(new TextEncoder().encode('0')); //nothing
-        }
+        await writer.write(new TextEncoder().encode(message));
       }
 
       requestAnimationFrame(detectFrame);
