@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>All Class Detection + Arduino (No Roboflow)</title>
+  <title>Person/Wineglass Detection + Arduino</title>
 </head>
 <body>
-  <h2>All Object Detection in the Browser</h2>
+  <h2>Object Detection in the Browser</h2>
   <video id="webcam" width="640" height="480" autoplay playsinline></video>
   <canvas id="canvas" width="640" height="480" style="position: absolute; top: 0; left: 0;"></canvas>
   <br />
@@ -50,7 +50,8 @@
       const predictions = await model.detect(video);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      let foundPerson = false;
+      let personCount = 0;
+      let foundWineglass = false;
 
       predictions.forEach(pred => {
         const [x, y, width, height] = pred.bbox;
@@ -65,12 +66,24 @@
         ctx.fillText(label, x, y - 5);
 
         if (pred.class === "person" && pred.score > 0.25) {
-          foundPerson = true;
+          personCount++;
+        }
+
+        if (pred.class === "wine glass" && pred.score > 0.25) {
+          foundWineglass = true;
         }
       });
 
       if (writer) {
-        await writer.write(new TextEncoder().encode(foundPerson ? '1' : '0'));
+        if (personCount >= 2) {
+          await writer.write(new TextEncoder().encode('3')); // LED 3 for 2+ people
+        } else if (personCount === 1) {
+          await writer.write(new TextEncoder().encode('1')); // LED 1 for 1 person
+        } else if (foundWineglass) {
+          await writer.write(new TextEncoder().encode('2')); // LED 2 for wineglass
+        } else {
+          await writer.write(new TextEncoder().encode('0')); // Turn off LEDs
+        }
       }
 
       requestAnimationFrame(detectFrame);
