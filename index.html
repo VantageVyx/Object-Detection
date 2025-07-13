@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Person/Wineglass Detection + Arduino</title>
+  <title>Person/Cup Detection + Arduino</title>
 </head>
 <body>
   <h2>Object Detection in the Browser</h2>
@@ -51,7 +51,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       let personCount = 0;
-      let foundWineglass = false;
+      let foundCup = false;
 
       predictions.forEach(pred => {
         const [x, y, width, height] = pred.bbox;
@@ -69,20 +69,20 @@
           personCount++;
         }
 
-        if (pred.class === "wine glass" && pred.score > 0.25) {
-          foundWineglass = true;
+        if (pred.class === "cup" && pred.score > 0.25) {
+          foundCup = true;
         }
       });
 
       if (writer) {
         if (personCount >= 2) {
-          await writer.write(new TextEncoder().encode('3')); // LED 3 for 2+ people
+          await writer.write(new TextEncoder().encode('3')); //2+ people
         } else if (personCount === 1) {
-          await writer.write(new TextEncoder().encode('1')); // LED 1 for 1 person
-        } else if (foundWineglass) {
-          await writer.write(new TextEncoder().encode('2')); // LED 2 for wineglass
+          await writer.write(new TextEncoder().encode('1')); //1 person
+        } else if (foundCup) {
+          await writer.write(new TextEncoder().encode('2')); //cup
         } else {
-          await writer.write(new TextEncoder().encode('0')); // Turn off LEDs
+          await writer.write(new TextEncoder().encode('0')); //nothing
         }
       }
 
